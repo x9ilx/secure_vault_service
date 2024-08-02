@@ -1,7 +1,11 @@
 from fastapi import FastAPI
-from app.api.endpoints import auth, secrets
 
-app = FastAPI()
+from app.api.routers import main_router
+from app.core.config import settings
 
-app.include_router(auth.router, prefix="/auth", tags=["auth"])
-app.include_router(secrets.router, prefix="/secrets", tags=["secrets"])
+
+app = FastAPI(
+    title=settings.app.app_title,
+    description=settings.app.app_description
+)
+app.include_router(main_router)
