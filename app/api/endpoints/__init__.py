@@ -1,1 +1,1 @@
-from .auth import router as user_router # noqa
+from .auth import router as user_router  # noqa

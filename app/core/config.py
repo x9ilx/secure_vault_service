@@ -1,10 +1,8 @@
 from typing import Optional
 
-from dotenv import load_dotenv
 from pydantic import BaseModel, EmailStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-load_dotenv()
 
 class AppConfig(BaseModel):
     app_title: str = (
@@ -33,7 +31,8 @@ class SecurityConfig(BaseModel):
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file = '../.env',
+        env_file='app/.env',
+        env_file_encoding='utf-8',
         case_sensitive=False,
         env_nested_delimiter='__',
         env_prefix='APP_CONFIG__',

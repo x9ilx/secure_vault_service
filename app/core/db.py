@@ -1,10 +1,15 @@
 from typing import AsyncGenerator
 
-from sqlalchemy import Column, Integer
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.orm import declarative_base, declared_attr
+from sqlalchemy.ext.asyncio import (AsyncSession, async_sessionmaker,
+                                    create_async_engine)
+from sqlalchemy.orm import (
+    declarative_base,
+    declared_attr,
+    Mapped,
+    mapped_column
+)
 
-from app.core.config import settings
+from .config import settings
 
 
 class PreBase:
@@ -12,7 +17,7 @@ class PreBase:
     def __tablename__(cls):
         return cls.__name__.lower()
 
-    id = Column(Integer(), primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
 
 
 Base = declarative_base(cls=PreBase)
