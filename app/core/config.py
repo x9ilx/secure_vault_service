@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Optional
 
 from pydantic import BaseModel, EmailStr
@@ -6,18 +7,24 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class AppConfig(BaseModel):
     app_title: str = (
-        'Сервис защищенного обмена сообщениями и файлами в сети организации'
+        (
+            'Secure messaging and file sharing service on the organization\'s '
+            'network'
+        )
     )
     app_description: str = (
-        'Сервис позволяет назначить время жизни сообщению, а так же '
-        'назначить секретную фразу (пароль), для доступа к сообщению. '
-        'Сообщения без секретной фразы (пароля) общедоступны и их могут '
-        'Просматривать все авторизованные пользователи.'
+        'The service allows you to assign a lifetime to a message, as well as '
+        'assign a secret phrase (password) to access the message. '
+        'Messages without a secret phrase (password) are publicly available '
+        'and can be viewed by all authorized users.'
     )
+    base_dir_for_files: Path = Path('files/')
+    chunk_size: int = 1024
 
 
 class DBConfig(BaseModel):
     database_url: str = None
+    sheduler_database_url: str = None
     echo: bool = False
     echo_pool: bool = False
     first_superuser_email: Optional[EmailStr] = None
@@ -43,3 +50,11 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+
+def create_dirs():
+    results_dir = Path(settings.app.base_dir_for_files)
+    results_dir.mkdir(exist_ok=True)
+
+
+create_dirs()

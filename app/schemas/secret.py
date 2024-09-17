@@ -1,70 +1,67 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel
-
-from app.models.secret import SecretFiles, SecretForUsers
+from pydantic import BaseModel, Field
 
 
 class SecretFileBase(BaseModel):
+    id: int
     path: str
 
 
-class SecretFileCreate(SecretFileBase):
-    pass
-
-
-class SecretFileUpdate(SecretFileBase):
-    pass
-
-
 class SecretFileView(SecretFileBase):
-    id: int
-
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class SecretForUsersBase(BaseModel):
+    id: int
     user_id: int
-    
-
-
-class SecretForUsersCreate(SecretForUsersBase):
-    secret_id: int
-
-
-class SecretForUsersUpdate(SecretForUsersBase):
-    pass
 
 
 class SecretForUsersView(SecretForUsersBase):
-    id: int
-
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class SecretBase(BaseModel):
-    owner_id: int
     text: str
-    files: Optional[list[SecretFileBase]]
-    for_users: Optional[list[SecretForUsersBase]]
+    lifetime: int = Field(..., ge=60)
 
 
 class SecretCreate(SecretBase):
-    passphrase: str
+    passphrase: Optional[str] = Field(None)
+    for_users: list[int]
 
 
-class SecretUpdate(SecretBase):
-    passphrase: str
+class SecretUpdate(SecretCreate):
+    files: Optional[list[SecretFileBase]]
+    for_users: Optional[SecretForUsersBase]
+
 
 class SecretView(SecretBase):
     id: int
+    owner_id: int
     create_date: datetime
     destroy_date: datetime
-    files: Optional[list[SecretFileView]]
-    for_users: Optional[list[SecretForUsersView]]
+    files: list[SecretFileView] = []
+    secrets_for_users: list[SecretForUsersView] = []
 
     class Config:
-        orm_mode = True
+        from_attributes = True
+
+
+class SecretGetFile(BaseModel):
+    file_name: str
+    passphrase: Optional[str] = Field(None)
+
+
+class SecretViewForUser(SecretBase):
+    id: int
+    owner_id: int
+    create_date: datetime
+    destroy_date: datetime
+    files: list[SecretFileView] = []
+
+    class Config:
+        from_attributes = True

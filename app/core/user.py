@@ -1,14 +1,13 @@
-from fastapi import Depends
-from fastapi_users import BaseUserManager, IntegerIDMixin
-from fastapi_users.authentication import (AuthenticationBackend,
-                                          BearerTransport, JWTStrategy)
-from fastapi_users.db import SQLAlchemyUserDatabase
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.core.config import settings
 from app.core.db import get_async_session
 from app.models.security import AccessToken
 from app.models.user import User
+from fastapi import Depends
+from fastapi_users import BaseUserManager, FastAPIUsers, IntegerIDMixin
+from fastapi_users.authentication import (AuthenticationBackend,
+                                          BearerTransport, JWTStrategy)
+from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
+from sqlalchemy.ext.asyncio import AsyncSession
 
 bearer_transport = BearerTransport(tokenUrl='auth/jwt/login')
 
@@ -44,3 +43,8 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
 
 async def get_user_manager(user_db=Depends(get_user_db)):
     yield UserManager(user_db)
+
+
+fastapi_user = FastAPIUsers[User, int](get_user_manager, [auth_backend])
+current_user = fastapi_user.current_user(active=True)
+current_superuser = fastapi_user.current_user(active=True, superuser=True)

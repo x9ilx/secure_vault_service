@@ -1,10 +1,10 @@
 import datetime
 from typing import Optional
-import argon2
-from sqlalchemy import ForeignKey, String, DateTime
-from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.db import Base
+from argon2 import PasswordHasher
+from sqlalchemy import DateTime, ForeignKey, Integer, String, CheckConstraint
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 
 class Secret(Base):
@@ -17,23 +17,33 @@ class Secret(Base):
         String(1024),
         nullable=True,
     )
+    lifetime: Mapped[int] = mapped_column(
+        Integer,
+        CheckConstraint('lifetime >= 60', name='secret_lifetime_min_value'),
+    )
     create_date: Mapped[datetime.datetime] = mapped_column(
         DateTime(True),
         default=datetime.datetime.now(),
     )
-    destroy_date: Mapped[Optional[datetime.datetime]] = mapped_column(
+    destroy_date: Mapped[datetime.datetime] = mapped_column(
         DateTime(True),
-        default=None,
     )
-    files: Mapped[list['SecretFiles']] = relationship(back_populates='secret',)
-    secrets_for_users: Mapped[
-        list['app.models.secret.SecretForUsers']
-    ] = relationship()
+    files: Mapped[list['SecretFiles']] = relationship(
+        'SecretFiles', back_populates='secret'
+    )
+    secrets_for_users: Mapped[list['SecretForUsers']] = relationship(
+        'SecretForUsers', back_populates='secret'
+    )
 
     @staticmethod
     def hash_passphrase(passphrase: str) -> str:
-        argon2.hash_password()
-        return passphrase
+        password_hasher = PasswordHasher()
+        return password_hasher.hash(passphrase)
+
+    @staticmethod
+    def verify_passphrase(passphrase: str, obj_hash: str):
+        password_hasher = PasswordHasher()
+        return password_hasher.verify(obj_hash, passphrase)
 
 
 class SecretFiles(Base):
@@ -42,7 +52,7 @@ class SecretFiles(Base):
         ForeignKey('secret.id'),
         primary_key=True,
     )
-    secret: Mapped['Secret'] = relationship(back_populates='files',)
+    secret: Mapped['Secret'] = relationship('Secret', back_populates='files')
 
 
 class SecretForUsers(Base):
@@ -55,8 +65,10 @@ class SecretForUsers(Base):
         primary_key=True,
     )
     user: Mapped['app.models.user.User'] = relationship(
+        'User',
         back_populates='secrets_for_users',
     )
     secret: Mapped['app.models.secret.Secret'] = relationship(
+        'Secret',
         back_populates='secrets_for_users',
     )
